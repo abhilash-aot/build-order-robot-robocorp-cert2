@@ -8,32 +8,38 @@ Documentation     Orders robots from RobotSpareBin Industries Inc.
 
 #imported Libraries
 Library           RPA.Browser.Selenium
-Library           RPA.RobotLogListener
 Library           RPA.HTTP
 Library           RPA.Tables
+Library           RPA.Robocorp.Vault
 # -
 
 *** Variables ***
-${THIS_LOCATOR_MATCHES}=    css:input
-${THIS_LOCATOR_DOES_NOT_MATCH}=    this-locator-does-not-match-anything
+${VAULT_SECRET_KEY}                    urls 
+${ORDER_URL_TYPE}                      orderUrl
+${ORDER_DATA_URL_TYPE}                 orderDataUrl
 
-*** Keywords ***
-Click Element If It Appears
-    [Arguments]    ${locator}
-    Mute Run On Failure    Click Element When Visible
-    Run Keyword And Ignore Error    Click Element When Visible    ${locator}
 
 # +
 *** Keywords ***
+Get Url From Vault
+      [Arguments]   ${urlType}
+      Log   ${VAULT_SECRET_KEY}
+      ${secretUrls}=  Get Secret     ${VAULT_SECRET_KEY}
+      Log   ${secretUrls}
+      Log   ${secretUrls}[${urlType}]
+      [return]  ${secretUrls}[${urlType}]
+
 Open the robot order website
-    Open Available Browser    https://robotsparebinindustries.com/#/robot-order
+    ${orderUrl}=    Get Url From Vault      ${ORDER_URL_TYPE} 
+    Open Available Browser  ${orderUrl}   
     
 Close the annoying modal
     Wait Until Page Contains Element   class:modal-dialog 
     Click Button  I guess so...
         
 Download the CSV file
-    Download    https://robotsparebinindustries.com/orders.csv    overwrite=True
+    ${orderDataUrl}=    Get Url From Vault      ${ORDER_DATA_URL_TYPE} 
+    Download    ${orderDataUrl}    overwrite=True
     
 Read orders csv file into Orders variable
     ${orders}=
@@ -76,10 +82,10 @@ Order the robots one by one from RobotSpareBin Industries Inc
     Open the robot order website
     Close the annoying modal
     
-    ${modalDataHTML}=   Get data of models
-    Log     ${modalDataHTML}
-    ${modalData}=    Read Table From Html    ${modalDataHTML}
-    Log     ${modalData}
+    #${modalDataHTML}=   Get data of models
+    #Log     ${modalDataHTML}
+    #${modalData}=    Read Table From Html    ${modalDataHTML}
+    #Log     ${modalData}
     
      #Order the robots one by one from RobotSpareBin Industries Inc 
      FOR    ${order}    IN    @{allOrders}
