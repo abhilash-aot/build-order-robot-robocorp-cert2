@@ -62,8 +62,6 @@ Submit the Robot Order Form And Open the Recipet Page
   Wait Until Page Contains Element  id:receipt
   
 Create screenshot and pdf output Directories
-  Create Directory    ${OUTPUT_DIR}
-  Empty Directory     ${OUTPUT_DIR}
   Create Directory    ${IMAGE_SCREENSHOTS_DIR}
   Empty Directory     ${IMAGE_SCREENSHOTS_DIR}
   Create Directory    ${RECEIPTS_PDF_DIR}
@@ -72,7 +70,8 @@ Create screenshot and pdf output Directories
 
 Save a screenshot of each of the ordered robot
   [Arguments]  ${id}
-  Wait Until Page Contains Element   id:robot-preview-image
+  Sleep  1s
+  Wait Until Page Contains Element   id:robot-preview-image     timeout=25
   Screenshot    id:robot-preview-image  ${IMAGE_SCREENSHOTS_DIR}${/}${id}.png
   [return]  ${IMAGE_SCREENSHOTS_DIR}${/}${id}.png
   
@@ -120,7 +119,7 @@ Get the data for placing the order
     Download the CSV file
     
 Create Consolidated Reciepts in Zip format
-    Archive Folder With Zip    ${RECEIPTS_PDF_DIR}    ${CURDIR}${/}output${/}consolidatedreceipts.zip    
+    Archive Folder With Zip    ${RECEIPTS_PDF_DIR}    ${OUTPUT_DIR}${/}consolidatedreceipts.zip    
 
 Place the robot order one by one from the order data Obtained   
     
