@@ -17,9 +17,12 @@ Library           RPA.Robocorp.Vault
 ${VAULT_SECRET_KEY}                    urls 
 ${ORDER_URL_TYPE}                      orderUrl
 ${ORDER_DATA_URL_TYPE}                 orderDataUrl
+${RETRY_TIMES}                         10x
+${RETRY_INTERVAL}                      1s
 ${OUTPUT_DIR}                          ${CURDIR}${/}output${/}
 ${IMAGE_SCREENSHOTS_DIR}               ${CURDIR}${/}output${/}screenshots
 ${RECEIPTS_PDF_DIR}                    ${CURDIR}${/}output${/}receipts
+
 
 
 
@@ -50,6 +53,10 @@ Read orders csv file into Orders variable
     Log    ${orders}    
     [return]  ${orders}
 
+Submit the Robot Order Form And Open the Recipet Page
+  Click Element    id:order
+  Wait Until Page Contains Element  id:receipt
+
 
 Fill and submit the robot order form for single robot
     [Arguments]    ${data}
@@ -59,6 +66,15 @@ Fill and submit the robot order form for single robot
    Input Text  //input[@placeholder="Enter the part number for the legs"]  ${data}[Legs]
    Input Text  address  ${data}[Address]
    Click Button    id:preview
+   
+   #this form submission fails in site with error some times so need to try again in case
+   Wait Until Keyword Succeeds
+  ...  ${RETRY_TIMES}
+  ...  ${RETRY_INTERVAL}
+  ...  Submit the Robot Order Form And Open the Recipet Page
+  
+   
+   Click Button    id:order-another
   
    Log    ${data}
     
@@ -69,13 +85,14 @@ Place the robot order one by one from the order data Obtained
     
     ${allOrders}=   Read orders csv file into Orders variable
     
-    Open the robot order website
-    #the annoying modal comes in each iteration
-    Close the annoying modal  
+    Open the robot order website  
     
     FOR    ${order}    IN    @{allOrders}
+       #the annoying modal comes in each iteration
+       Close the annoying modal
+       
        Fill and submit the robot order form for single robot    ${order}
-      #  Preview the robot
+       #  Preview the robot
        # Submit the order
        # ${pdf}=    Store the receipt as a PDF file    ${row}[Order number]
        # ${screenshot}=    Take a screenshot of the robot    ${row}[Order number]
