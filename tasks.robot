@@ -11,22 +11,23 @@ Library           RPA.Browser.Selenium
 Library           RPA.HTTP
 Library           RPA.Tables
 Library           RPA.Robocorp.Vault
-# -
 
+# +
 *** Variables ***
 ${VAULT_SECRET_KEY}                    urls 
 ${ORDER_URL_TYPE}                      orderUrl
 ${ORDER_DATA_URL_TYPE}                 orderDataUrl
+${OUTPUT_DIR}                          ${CURDIR}${/}output${/}
+${IMAGE_SCREENSHOTS_DIR}               ${CURDIR}${/}output${/}screenshots
+${RECEIPTS_PDF_DIR}                    ${CURDIR}${/}output${/}receipts
+
 
 
 # +
 *** Keywords ***
 Get Url From Vault
       [Arguments]   ${urlType}
-      Log   ${VAULT_SECRET_KEY}
       ${secretUrls}=  Get Secret     ${VAULT_SECRET_KEY}
-      Log   ${secretUrls}
-      Log   ${secretUrls}[${urlType}]
       [return]  ${secretUrls}[${urlType}]
 
 Open the robot order website
@@ -47,56 +48,48 @@ Read orders csv file into Orders variable
     ...    orders.csv
     ...    header=True
     Log    ${orders}    
-    [return]  ${orders}   
-    
-Opem the info modal
-    Click Button  Show model info    
-    
-Close the info modal
-    Wait Until Page Contains Element   Hide modal info
-    Click Button  Hide modal info      
-
-Get data of models
-    Opem the info modal
-    ${html_table}=    Get Element Attribute    id:model-info    outerHTML
-    [return]    ${html_table}
+    [return]  ${orders}
 
 
-Fill the robot order form
+Fill and submit the robot order form for single robot
     [Arguments]    ${data}
     
-    Log    ${data}
+   Select From List By Value  head    ${data}[Head]
+   Click Element  //input[@name="body"][@value=${data}[Body]]
+   Input Text  //input[@placeholder="Enter the part number for the legs"]  ${data}[Legs]
+   Input Text  address  ${data}[Address]
+   Click Button    id:preview
+  
+   Log    ${data}
     
-    
-# -
-
-*** Tasks ***
-Order the robots one by one from RobotSpareBin Industries Inc 
-
-    #Get the data for placing the order 
+Get the data for placing the order
     Download the CSV file
+
+Place the robot order one by one from the order data Obtained   
+    
     ${allOrders}=   Read orders csv file into Orders variable
-    Log  ${allOrders} 
-   
-    #Open the robotSparebin site and close the annoying modal   
+    
     Open the robot order website
-    Close the annoying modal
+    #the annoying modal comes in each iteration
+    Close the annoying modal  
     
-    #${modalDataHTML}=   Get data of models
-    #Log     ${modalDataHTML}
-    #${modalData}=    Read Table From Html    ${modalDataHTML}
-    #Log     ${modalData}
-    
-     #Order the robots one by one from RobotSpareBin Industries Inc 
-     FOR    ${order}    IN    @{allOrders}
-       Fill the robot order form    ${order}
+    FOR    ${order}    IN    @{allOrders}
+       Fill and submit the robot order form for single robot    ${order}
       #  Preview the robot
        # Submit the order
        # ${pdf}=    Store the receipt as a PDF file    ${row}[Order number]
        # ${screenshot}=    Take a screenshot of the robot    ${row}[Order number]
        # Embed the robot screenshot to the receipt PDF file    ${screenshot}    ${pdf}
        # Go to order another robot
-    END
+     END
+    
+# -
+
+*** Tasks ***
+Order the robots one by one from RobotSpareBin Industries Inc 
+    Get the data for placing the order 
+    Place the robot order one by one from the order data Obtained   
+
     #Create a ZIP file of the receipts
     #[Teardown]    Close All Browsers
     Log    Done.
