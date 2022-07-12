@@ -142,11 +142,11 @@ Place the robot order one by one from the order data Obtained
 Order the robots one by one from RobotSpareBin Industries Inc 
     
     #step 1
-    Get the data for placing the order 
+    Get the data for placing the order
     #step 2
     Create screenshot and pdf output Directories
     #step 3
-    Place the robot order one by one from the order data Obtained 
+    Place the robot order one by one from the order data Obtained
     #step 4
     Create Consolidated Reciepts in Zip format
     
