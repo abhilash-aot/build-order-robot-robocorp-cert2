@@ -14,6 +14,7 @@ Library           RPA.Robocorp.Vault
 Library           OperatingSystem
 Library           RPA.PDF
 Library           RPA.Archive
+Library           RPA.Dialogs
 
 
 # +
@@ -21,9 +22,6 @@ Library           RPA.Archive
 ${VAULT_SECRET_KEY}                    urls 
 ${ORDER_URL_TYPE}                      orderUrl
 ${ORDER_DATA_URL_TYPE}                 orderDataUrl
-${RETRY_TIMES}                         10x
-${RETRY_INTERVAL}                      1s
-${OUTPUT_DIR}                          ${CURDIR}${/}output
 ${IMAGE_SCREENSHOTS_DIR}               ${CURDIR}${/}output${/}screenshots
 ${RECEIPTS_PDF_DIR}                    ${CURDIR}${/}output${/}receipts
 
@@ -32,6 +30,13 @@ ${RECEIPTS_PDF_DIR}                    ${CURDIR}${/}output${/}receipts
 
 # +
 *** Keywords ***
+Greet the User
+  Add heading     Please enter your Name
+  Add text input  userName
+  ${dialogueData} =  Run dialog
+  Log   Welcome ${dialogueData.userName} to Order Process Management in RobotSpareBin   console=true
+
+
 Get Url From Vault
       [Arguments]   ${urlType}
       ${secretUrls}=  Get Secret     ${VAULT_SECRET_KEY}
@@ -99,10 +104,7 @@ Fill and submit the robot order form for single robot
    Click Button    id:preview
    
    #this form submission fails in site with error some times so need to try again in case
-   Wait Until Keyword Succeeds
-  ...  ${RETRY_TIMES}
-  ...  ${RETRY_INTERVAL}
-  ...  Submit the Robot Order Form And Open the Recipet Page
+   Wait Until Keyword Succeeds  10x  1s  Submit the Robot Order Form And Open the Recipet Page
   
     
    ${screenshotTaken} =  Save a screenshot of each of the ordered robot  ${data}[Order number]
@@ -119,7 +121,12 @@ Get the data for placing the order
     Download the CSV file
     
 Create Consolidated Reciepts in Zip format
-    Archive Folder With Zip    ${RECEIPTS_PDF_DIR}    ${OUTPUT_DIR}${/}consolidatedreceipts.zip    
+    Archive Folder With Zip    ${CURDIR}${/}output${/}receipts      ${CURDIR}${/}output${/}consolidatedReciepts.zip    
+
+Inform User about Order Completion
+    Add icon      Success
+    Add heading   Your all robot orders have been processed and the zip file is generated in output directory!!!
+    Run dialog    title=Success
 
 Place the robot order one by one from the order data Obtained   
     
@@ -134,12 +141,11 @@ Place the robot order one by one from the order data Obtained
        Fill and submit the robot order form for single robot    ${order}
        
      END
-    
 # -
 
 *** Tasks ***
 Order the robots one by one from RobotSpareBin Industries Inc 
-    
+    Greet the User
     #step 1
     Get the data for placing the order
     #step 2
@@ -149,8 +155,12 @@ Order the robots one by one from RobotSpareBin Industries Inc
     #step 4
     Create Consolidated Reciepts in Zip format
     
-    #[Teardown]    Close All Browsers
+    Inform User about Order Completion
     
-    Log    Done.
+    [Teardown]    Close All Browsers
+    
+    Log    Your Ordering is Completed.
+
+
 
 
